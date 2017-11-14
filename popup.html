@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="node_modules/material-design-icons/iconfont/material-icons.css" rel="stylesheet">
+    <link href="popup.css" rel="stylesheet">
+</head>
+
+<body>
+    <ul id="navs" class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active material-icons md-18" title="Mail List" data-toggle="tab" href="#list">list</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link material-icons md-18" title="New Mail" data-toggle="tab" href="#add">add_box</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link material-icons md-18" title="Settings" data-toggle="tab" href="#settings">settings</a>
+        </li>
+        <li class="nav-item d-none">
+            <a class="nav-link material-icons md-18" title="Edit Mail" data-toggle="tab" href="#edit">edit</a>
+        </li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <div role="tabpanel" class="tab-pane active" id="list">
+            <ul class="list-group" data-bind="foreach:mails">
+                <li data-bind="showOperations:true,attr:{title:user}" class="list-group-item d-flex justify-content-between align-items-center">
+                    <a class="content" href="###" data-bind="text:displayName(),click:$root.visitWeb"></a>
+                    <div class="d-flex operations invisible">
+                        <i class="material-icons md-18" title="Edit Mail" data-bind="click:$root.edit">edit</i>
+                        <i class="material-icons md-18" title="Remove Mail" data-bind="click:$root.remove">delete</i>
+                    </div>
+                    <span class="badge badge-secondary" data-bind="css:{ 'badge-success': unseen() },text:unseen()||0">0</span>
+                </li>
+            </ul>
+            <div class="alert alert-warning my-2" role="alert" data-bind="visible: mails().length==0">
+                Please
+                <a data-bind="click:showTab.bind($data,'add')" href="#" class="alert-link">add</a> or
+                <a data-bind="click:showTab.bind($data,'settings')" href="#" class="alert-link">import</a> any mail info!
+            </div>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="add">
+            <form data-bind="submit:add,with:newMail">
+                <input type="text" class="form-control form-control-sm" data-bind="value:name" placeholder="Name">
+                <input type="email" class="form-control form-control-sm" data-bind="value:user" placeholder="Email">
+                <input type="password" class="form-control form-control-sm" data-bind="value:password" placeholder="Password">
+                <input type="text" class="form-control form-control-sm" data-bind="value:host" placeholder="Host">
+                <input type="number" class="form-control form-control-sm" data-bind="value:port" placeholder="Port">
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input type="checkbox" data-bind="checked:tls" class="form-check-input"> TLS
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary">Save</button>
+            </form>
+        </div>
+        <div role="tabpanel" class="tab-pane" id="edit">
+            <form data-bind="submit:update,with:editMail">
+                <input type="text" class="form-control form-control-sm" data-bind="value:name" placeholder="Name">
+                <input type="email" class="form-control form-control-sm" data-bind="value:user" placeholder="Email">
+                <input type="password" class="form-control form-control-sm" data-bind="value:password" placeholder="Password">
+                <input type="text" class="form-control form-control-sm" data-bind="value:host" placeholder="Host">
+                <input type="number" class="form-control form-control-sm" data-bind="value:port" placeholder="Port">
+                <div class="form-check">
+                    <label class="form-check-label">
+                        <input type="checkbox" data-bind="checked:tls" class="form-check-input"> TLS
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary">Save</button>
+            </form>
+        </div>
+        <div role="tabpanel" class="tab-pane p-2" id="settings">
+            <div class="">
+                <button class="btn btn-sm btn-info" data-bind="click:$root.export,enable: mails().length">Export</button>
+                <button class="btn btn-sm btn-success" data-bind="click:$root.import">Import</button>
+            </div>
+
+            <input id="fileSelector" type="file" accept=".json" class="invisible" />
+        </div>
+    </div>
+    <script src="node_modules/jquery/dist/jquery.min.js"></script>
+    <script src="node_modules/popper.js/dist/umd/popper.min.js"></script>
+    <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="node_modules/knockout/build/output/knockout-latest.js"></script>
+    <script src="node_modules/file-saver/FileSaver.min.js"></script>
+    <script src="popup.js"></script>
+</body>
+
+</html>

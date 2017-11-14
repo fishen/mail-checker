@@ -1,0 +1,23 @@
+{
+    "manifest_version": 2,
+    "name": "mail checker",
+    "description": "This extension allows the user to subscribe the new email.",
+    "version": "1.0",
+    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+    "browser_action": {
+        "default_icon": "images/icon.png",
+        "default_popup": "popup.html"
+    },
+    "background": {
+        "persistent": false,
+        "scripts": [
+            "background.js"
+        ]
+    },
+    "permissions": [
+        "activeTab",
+        "storage",
+        "background",
+        "alarms"
+    ]
+}
