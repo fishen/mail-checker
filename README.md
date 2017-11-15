@@ -1,2 +1,2 @@
 # mail-checker
-A chrome extension which can check new mail
+A chrome extension which can check new mail.

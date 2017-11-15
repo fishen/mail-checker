@@ -1,96 +1,56 @@
-chrome.storage.local.get('mails', function (obj) {
-    var mails = Array.isArray(obj.mails) ? obj.mails : [];
-    mails = mails.map(m => new Mail(m));
-    var model = new EmailListViewModel();
-    model.mails(mails);
-    ko.applyBindings(model);
-    chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-        var oldItem = model.mails().find(m => m.user() === message.user);
-        var newItem = new Mail(message);
-        model.mails.replace(oldItem, newItem);
-    });
-    document.querySelector('#fileSelector').addEventListener('change', function (e) {
-        if (e.target.files.length == 0) return false;
-        var reader = new FileReader();
-        reader.addEventListener("loadend", function (result) {
-            var mails;
-            try {
-                mails = JSON.parse(reader.result);
-                if (!Array.isArray(mails)) throw new Error();
-            } catch (e) {
-                alert('invalid json file!');
-            }
-            e.target.value = '';
-            if (!mails) return false;
-            mails.forEach(mail => {
-                if (!mail || !mail.user) return false;
-                var oldItem = model.mails().find(m => m.user() === mail.user);
-                mail.unseen = 0;
-                var newItem = new Mail(mail);
-                if (oldItem) {
-                    model.mails.replace(oldItem, newItem);
-                } else {
-                    model.mails.push(newItem);
-                }
-            });
-            model.updateStorage();
-            model.showTab(Tabs.list);
-        });
-        reader.readAsText(e.target.files[0]);
-    });
-});
-
+//page tabs enum
 const Tabs = {
     list: 'list',
     add: 'add',
     settings: 'settings',
     edit: 'edit'
 }
-
+//mail view model
 function Mail(data) {
     data = data || {};
-    this.user = ko.observable(data.user);
-    this.password = ko.observable(data.password);
-    this.host = ko.observable(data.host);
-    this.port = ko.observable(data.port);
-    this.name = ko.observable(data.name || '');
-    this.tls = ko.observable(data.tls);
-    this.unseen = ko.observable(data.unseen);
-    this.displayName = ko.computed(() => {
+    this.user = ko.observable(data.user);//email address
+    this.password = ko.observable(data.password);//email password
+    this.host = ko.observable(data.host);//host
+    this.port = ko.observable(data.port || 993);//port
+    this.name = ko.observable(data.name || '');//remark
+    this.tls = ko.observable(data.tls || true);//whether use tls
+    this.unseen = ko.observable(data.unseen);//unseen count
+    this.error = ko.observable();//whether existing problem 
+    this.displayName = ko.computed(() => {//compute the display name in the 'list' tab
         return this.name() || this.user();
     }, this);
 }
 
 function EmailListViewModel() {
-    this.mails = ko.observableArray([]);
-    this.newMail = ko.observable(new Mail());
-    this.editMail = ko.observable();
-    this.currentHover = ko.observable();
-    this.active = (mail, e) => {
-        var mail = e.type === 'mouseover' ? mail : null;
-        this.currentHover(mail);
-    }
+    this.mails = ko.observableArray([]);//mail list
+    this.newMail = ko.observable(new Mail());//mail view model exist in the 'add' tab
+    this.editingMail = ko.observable();//mail view model exist in the 'edit' tab
+    this.settingsError = ko.observable();//some error in the 'settings' tab
     this.add = () => {
         var mail = this.newMail();
         if (!mail) return;
-        this.mails.push(mail);
-        this.newMail(new Mail());
-        this.showTab(Tabs.list);
-        this.updateStorage();
+        this.mails.push(mail);//update mails in the memeory
+        this.newMail(new Mail());//reset the new veiw model
+        this.showTab(Tabs.list);//back to the 'list' tab
+        this.saveStorage();//update mails in the storage
     };
+    //active mail 'edit' tab
     this.edit = (mail) => {
-        this.editMail(mail);
-        this.showTab(Tabs.edit);
+        this.editingMail(mail);
+        this.showTab(Tabs.edit);// active the 'edit' tab
     };
+    //submit mail update
     this.update = (form) => {
-        this.showTab(Tabs.list);
-        this.editMail(null);
-        this.updateStorage();
+        this.showTab(Tabs.list);//back to the 'list' tab
+        this.saveStorage();//update mails in the storage
+        this.editingMail(null);//reset the editing view model
     };
+    //remove mail
     this.remove = (mail) => {
-        this.mails.remove(mail);
-        this.updateStorage();
+        this.mails.remove(mail);//remove mails in the memeory
+        this.saveStorage();//update mails in the storage
     };
+    //open the mail web page
     this.visitWeb = (mail) => {
         var mail = mail.user();
         if (!mail) return;
@@ -99,22 +59,66 @@ function EmailListViewModel() {
         var domain = mail.substring(index + 1).toLowerCase();
         chrome.tabs.create({ url: `https://mail.${domain}` });
     };
-    this.updateStorage = () => {
+    //update mails in the storage
+    this.saveStorage = () => {
+        
         chrome.storage.local.set({ 'mails': ko.toJS(this.mails()) });
     };
+    //export the mail list to the file named 'mail-checker.json'
     this.export = () => {
-        var json = ko.toJSON(this.mails, null, 2);
+        var whitelist = ['user', 'password', 'host', 'port', 'tls'];
+        var json = ko.toJSON(this.mails, whitelist, 2);
         var file = new File([json], "mail-checker.json", { type: "application/json;charset=utf-8" });
         saveAs(file);
     };
+    //update the current mail list
+    this.updateMails = mails => {
+        mails = Array.isArray(mails) ? mails : [mails];
+        mails.forEach(mail => {
+            if (!mail || !mail.user) return false;
+            var oldItem = this.mails().find(m => m.user() === mail.user);
+            var newItem = new Mail(mail);
+            if (oldItem) {//replace the current mail if exists
+                this.mails.replace(oldItem, newItem);
+            } else {//append new mail if not exists
+                this.mails.push(newItem);
+            }
+        });
+        this.saveStorage();//save the change to storage
+    }
+    //import external json file
     this.import = () => {
-        document.querySelector('#fileSelector').click();
+        var fileSelector = new FileSelector('.json');
+        fileSelector.readAsJSON()//read and return json data
+            .then(this.updateMails)//save changes
+            .then(() => this.showTab(Tabs.list))//active 'list' tab
+            .catch(err => {//error handle
+                this.settingsError('Invalid json file.');//show error info
+                setTimeout(() => this.settingsError(''), 3000);//hide error info after 3 senconds
+                console.error(err);
+            });
     };
+    //active specified tab
     this.showTab = (tab) => {
         $(`#navs a[href="#${tab}"]`).tab('show');
     };
 }
-
+//config ko
+chrome.storage.local.get('mails', (obj) => {
+    var mails = Array.isArray(obj.mails) ? obj.mails : [];
+    mails = mails.map(m => new Mail(m));//convert to view model
+    var model = new EmailListViewModel();
+    model.mails(mails);//set mail list
+    ko.applyBindings(model);
+    //receive message from background.js to update unseen count or error
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        var oldItem = model.mails().find(m => m.user() === message.user);
+        if (!oldItem) return;//ignore invalid and obsolete operation
+        oldItem.unseen(message.unseen);//update unseen count
+        oldItem.error(message.error);//update error info
+    });
+});
+//custom bindings to show or hide buttons
 ko.bindingHandlers.showOperations = {
     init: (ele) => {
         $(ele).hover(() => $(".operations", ele).toggleClass('invisible'));

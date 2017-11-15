@@ -8,25 +8,25 @@ app.use(cors());
 
 const port = 3000;
 
-app.post('/mail/ping', function (req, res) {
+app.post('/mail/count', (req, res) => {
     var imap = new Imap(req.body);
-    imap.once('error', function (err) {
+    imap.once('error', (err) => {
         res.status(400).json(err);
     });
     imap.once('end', () => res.end());
-    imap.once('ready', function () {
-        imap.status('INBOX', (err, box) => {
+    imap.once('ready', () => {
+        imap.status('inbox', (err, box) => {
             imap.destroy();
             if (err) {
                 res.status(500).json(err);
-                return;
+            } else {
+                res.json(box.messages);
             }
-            res.json(box.messages);
         });
     });
     imap.connect();
 });
 
-app.listen(port, function () {
+app.listen(port, () => {
     console.log(`Server listening on port ${port}.`);
 })

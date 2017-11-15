@@ -28,7 +28,7 @@
     <div class="tab-content">
         <div role="tabpanel" class="tab-pane active" id="list">
             <ul class="list-group" data-bind="foreach:mails">
-                <li data-bind="showOperations:true,attr:{title:user}" class="list-group-item d-flex justify-content-between align-items-center">
+                <li data-bind="showOperations:true,attr:{title:user},css:{'list-group-item-danger':error}" class="list-group-item d-flex justify-content-between align-items-center">
                     <a class="content" href="###" data-bind="text:displayName(),click:$root.visitWeb"></a>
                     <div class="d-flex operations invisible">
                         <i class="material-icons md-18" title="Edit Mail" data-bind="click:$root.edit">edit</i>
@@ -37,49 +37,51 @@
                     <span class="badge badge-secondary" data-bind="css:{ 'badge-success': unseen() },text:unseen()||0">0</span>
                 </li>
             </ul>
-            <div class="alert alert-warning my-2" role="alert" data-bind="visible: mails().length==0">
+            <div class="alert alert-warning alert-sm m-2" role="alert" data-bind="visible: mails().length==0">
                 Please
                 <a data-bind="click:showTab.bind($data,'add')" href="#" class="alert-link">add</a> or
                 <a data-bind="click:showTab.bind($data,'settings')" href="#" class="alert-link">import</a> any mail info!
             </div>
         </div>
-        <div role="tabpanel" class="tab-pane" id="add">
+        <div role="tabpanel" class="tab-pane p-2" id="add">
             <form data-bind="submit:add,with:newMail">
                 <input type="text" class="form-control form-control-sm" data-bind="value:name" placeholder="Name">
-                <input type="email" class="form-control form-control-sm" data-bind="value:user" placeholder="Email">
-                <input type="password" class="form-control form-control-sm" data-bind="value:password" placeholder="Password">
-                <input type="text" class="form-control form-control-sm" data-bind="value:host" placeholder="Host">
-                <input type="number" class="form-control form-control-sm" data-bind="value:port" placeholder="Port">
+                <input type="email" required class="form-control form-control-sm" data-bind="value:user" placeholder="Email">
+                <input type="password" required class="form-control form-control-sm" data-bind="value:password" placeholder="Password">
+                <input type="text" required class="form-control form-control-sm" data-bind="value:host" placeholder="Host">
+                <input type="number" required class="form-control form-control-sm" data-bind="value:port" placeholder="Port">
                 <div class="form-check">
                     <label class="form-check-label">
                         <input type="checkbox" data-bind="checked:tls" class="form-check-input"> TLS
                     </label>
                 </div>
-                <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                <button type="submit" class="btn btn-sm btn-info">Save</button>
             </form>
         </div>
-        <div role="tabpanel" class="tab-pane" id="edit">
-            <form data-bind="submit:update,with:editMail">
+        <div role="tabpanel" class="tab-pane p-2" id="edit">
+            <form data-bind="submit:update,with:editingMail">
                 <input type="text" class="form-control form-control-sm" data-bind="value:name" placeholder="Name">
-                <input type="email" class="form-control form-control-sm" data-bind="value:user" placeholder="Email">
-                <input type="password" class="form-control form-control-sm" data-bind="value:password" placeholder="Password">
-                <input type="text" class="form-control form-control-sm" data-bind="value:host" placeholder="Host">
-                <input type="number" class="form-control form-control-sm" data-bind="value:port" placeholder="Port">
+                <input type="email" required class="form-control form-control-sm" data-bind="value:user" placeholder="Email">
+                <input type="password" required class="form-control form-control-sm" data-bind="value:password" placeholder="Password">
+                <input type="text" required class="form-control form-control-sm" data-bind="value:host" placeholder="Host">
+                <input type="number" required class="form-control form-control-sm" data-bind="value:port" placeholder="Port">
                 <div class="form-check">
                     <label class="form-check-label">
                         <input type="checkbox" data-bind="checked:tls" class="form-check-input"> TLS
                     </label>
                 </div>
-                <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                <button type="submit" class="btn btn-sm btn-info">Save</button>
             </form>
         </div>
         <div role="tabpanel" class="tab-pane p-2" id="settings">
+            <div data-bind="visible: settingsError" class="alert alert-danger alert-sm mb-2" role="alert">
+                <strong>Error!</strong>
+                <span data-bind="text:settingsError"></span>
+            </div>
             <div class="">
                 <button class="btn btn-sm btn-info" data-bind="click:$root.export,enable: mails().length">Export</button>
                 <button class="btn btn-sm btn-success" data-bind="click:$root.import">Import</button>
             </div>
-
-            <input id="fileSelector" type="file" accept=".json" class="invisible" />
         </div>
     </div>
     <script src="node_modules/jquery/dist/jquery.min.js"></script>
@@ -87,6 +89,7 @@
     <script src="node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="node_modules/knockout/build/output/knockout-latest.js"></script>
     <script src="node_modules/file-saver/FileSaver.min.js"></script>
+    <script src="utils/file-selector.js"></script>
     <script src="popup.js"></script>
 </body>
 

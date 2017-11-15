@@ -22,8 +22,8 @@ body {
     text-decoration: none; 
 }
 
-form{
-    padding: 0 10px;
+.alert-sm{
+    padding: 0.5rem 1rem;
 }
 
 .form-control,.form-check{
