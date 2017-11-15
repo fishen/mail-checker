@@ -5,8 +5,13 @@
     "version": "1.0",
     "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
     "browser_action": {
-        "default_icon": "images/icon.png",
+        "default_icon": "images/icon128.png",
         "default_popup": "popup.html"
+    },
+    "icons": {
+        "16": "images/icon18.png",
+        "48": "images/icon48.png",
+        "128": "images/icon128.png"
     },
     "background": {
         "persistent": false,
